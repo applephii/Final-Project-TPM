@@ -259,7 +259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             _currentPhotoUrl!,
                             key: ValueKey(
                               _currentPhotoUrl,
-                            ), // agar widget rebuild saat URL berubah
+                            ),
                             headers: const {'Cache-Control': 'no-cache'},
                             height: 130,
                             width: 130,
