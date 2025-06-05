@@ -34,7 +34,14 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      await SessionService.saveUser(userData['id'], userData['username'], userData['email']);
+      await SessionService.saveUser(
+        userData['id'],
+        userData['username'],
+        userData['email'],
+        userData['photo_url'],
+        // userData['updateAt'],
+      );
+
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (!mounted) return;

@@ -19,15 +19,6 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
   bool _isMoving = false;
   Timer? _movementResetTimer;
 
-  //placeholder buddies
-  final List<Map<String, String>> friends = [
-    {'name': 'Harry', 'location': 'London'},
-    {'name': 'Seungmin', 'location': 'Seoul'},
-    {'name': 'Yuuji', 'location': 'Tokyo'},
-    {'name': 'Qi', 'location': 'Yogyakarta'},
-  ];
-
-  //placeholder for books
   final List<Map<String, String>> books = [
     {
       'name': 'Book 1',
@@ -72,7 +63,7 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
   void initState() {
     super.initState();
 
-    _subscription = accelerometerEventStream().listen((event) {
+    _subscription = accelerometerEvents.listen((event) {
       final deltaX = (event.x - _prevX).abs();
       final deltaY = (event.y - _prevY).abs();
       final deltaZ = (event.z - _prevZ).abs();
@@ -97,29 +88,27 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('StudyBuddy', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 45, 93, 141),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Padding(padding: const EdgeInsets.all(16.0), child: _content()),
-      backgroundColor: Colors.white,
-    );
-  }
-
   Widget _buildBookCard(Map<String, String> book) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 4,
+      shadowColor: Colors.blue.shade200,
       child: ListTile(
-        leading: const Icon(Icons.menu_book_outlined, color: Color.fromARGB(255, 45, 93, 141), size: 40,),
-        title: Text(book['name'] ?? '', style: TextStyle(fontWeight: FontWeight.bold),),
-        subtitle: ElevatedButton(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        leading: Icon(Icons.menu_book_outlined,
+            color: Colors.blue.shade800, size: 40),
+        title: Text(
+          book['name'] ?? '',
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+        ),
+        trailing: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white
+            backgroundColor: Colors.blue.shade700,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           onPressed: () async {
             final url = Uri.parse(book['link']!);
@@ -129,36 +118,53 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
               );
             }
           },
-          child: const Text("Open Book"),
+          child: const Text(
+            "Open",
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
         ),
       ),
     );
   }
 
-  Widget _content() {
-    return ListView(
-      children: [
-        Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Study Device Movement Tracker",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          
-          const SizedBox(height: 20),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('StudyBuddy', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 45, 93, 141),
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
+      ),
+      body: Container(
+        color: Colors.grey[100],
+        padding: const EdgeInsets.all(20),
+        child: ListView(
+          children: [
+            const SizedBox(height: 10),
+            Text(
+              "Device Movement Tracker",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade900,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 25),
               decoration: BoxDecoration(
-                color: _isMoving ? Colors.blue[100] : Colors.grey[300],
-                borderRadius: BorderRadius.circular(25),
+                color: _isMoving ? Colors.blue.shade700 : Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: _isMoving
+                        ? Colors.blue.shade300.withOpacity(0.7)
+                        : Colors.grey.shade500.withOpacity(0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
@@ -167,86 +173,39 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
                 children: [
                   Icon(
                     Icons.directions_run,
-                    color: _isMoving ? Colors.white : Colors.black54,
+                    size: 32,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    _isMoving
-                        ? 'Device bergerak pada $formattedLastMovement'
-                        : 'Tidak ada pergerakan',
-                    style: TextStyle(
-                      color: _isMoving ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 15),
+                  Flexible(
+                    child: Text(
+                      _isMoving
+                          ? 'Device bergerak pada $formattedLastMovement'
+                          : 'Tidak ada pergerakan terdeteksi',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-
-          SizedBox(height: 40),
-          Text(
-            "Study Buddies",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 20),
-          SizedBox(
-            height: 180,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: friends.length,
-              itemBuilder: (context, index) {
-                final friend = friends[index];
-                return Container(
-                  width: 130,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Card(
-                    color: const Color.fromARGB(255, 45, 93, 141),
-                    elevation: 3,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.person,
-                            size: 36,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            friend['name'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            friend['location'] ?? '',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+            const SizedBox(height: 40),
+            Text(
+              "Books Available",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade900,
+              ),
             ),
-          ),
-          const SizedBox(height: 40),
-          Text(
-            "Books Available",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
-          ...books.map((book) => _buildBookCard(book)).toList(),
-        ],
+            const SizedBox(height: 10),
+            ...books.map((book) => _buildBookCard(book)).toList(),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
-      ]
     );
   }
 }

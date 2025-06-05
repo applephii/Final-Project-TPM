@@ -99,7 +99,7 @@ class _MainmenuPageState extends State<MainmenuPage> {
               mainAxisCellCount: 1,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/studybuddy');
+                  Navigator.pushNamed(context, '/buddies');
                 },
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -135,10 +135,7 @@ class _MainmenuPageState extends State<MainmenuPage> {
               mainAxisCellCount: 1,
               child: ElevatedButton(
                 onPressed: () async {
-                  final result = await Navigator.pushNamed(context, '/profile');
-                  if (result == true) {
-                    _loadusername();
-                  }
+                  final result = await Navigator.pushNamed(context, '/studybuddy');
                 },
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(

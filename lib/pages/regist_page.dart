@@ -40,11 +40,16 @@ class _RegistPageState extends State<RegistPage> {
       );
 
       if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
 
       await SessionService.saveUser(
         userData['id'],
         userData['username'],
         userData['email'],
+        userData['photo_url'],
+        // userData['updateAt']
       );
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
@@ -65,9 +70,22 @@ class _RegistPageState extends State<RegistPage> {
           ).showSnackBar(SnackBar(content: Text('Registration failed: $e')));
         }
 
-        _formKey.currentState!.validate();
+        if (!_formKey.currentState!.validate()) {
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
