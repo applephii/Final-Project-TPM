@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:studybuddy/models/user.dart';
 import 'package:studybuddy/sevices/photo_api.dart';
 import 'package:studybuddy/sevices/profile_api.dart';
 import 'package:studybuddy/sevices/session.dart';
@@ -40,12 +39,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     String? photoUrl;
     if (userId != null) {
-      // final photoUrl = (await PhotoApi.getProfilePhotoUrl(userId))?['url'];
       photoUrl = await PhotoApi.getProfilePhotoUrl(userId);
     }
 
     if (photoUrl == null || photoUrl.isEmpty) {
-      // await SessionService.savePhotoUrl('', '');
       await SessionService.savePhotoUrl('');
     }
 
@@ -61,7 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Akses context aman di sini
       _loadUserData();
     });
   }
@@ -99,10 +95,6 @@ class _ProfilePageState extends State<ProfilePage> {
         final photoUrl = await PhotoApi.uploadPhoto(userId, _selectedImage!);
         debugPrint('cek photourl di edit page: $photoUrl');
         if (photoUrl != null) throw Exception('Failed to upload photo');
-        // _currentPhotoUrl = photoUrl['url'];
-        // _currentPhotoUrl = photoUrl;
-        // await SessionService.savePhotoUrl(photoUrl['url'], photoUrl['updateAt']);
-        // await SessionService.savePhotoUrl(photoUrl ?? '');
 
         final timestampedUrl =
             "$photoUrl?t=${DateTime.now().millisecondsSinceEpoch}";
@@ -154,7 +146,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _isUploading = false);
 
     if (photoUrl != null) {
-      // await SessionService.savePhotoUrl(photoUrl['url'], photoUrl['updateAt']);
       await SessionService.savePhotoUrl(photoUrl);
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -257,9 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(75),
                           child: Image.network(
                             _currentPhotoUrl!,
-                            key: ValueKey(
-                              _currentPhotoUrl,
-                            ),
+                            key: ValueKey(_currentPhotoUrl),
                             headers: const {'Cache-Control': 'no-cache'},
                             height: 130,
                             width: 130,
@@ -274,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Icon(Icons.person, size: 50),
                         )),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: _pickImage,
             style: ElevatedButton.styleFrom(
@@ -287,7 +276,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(color: const Color.fromARGB(255, 45, 93, 141)),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 15),
           ElevatedButton.icon(
             onPressed:
                 (_selectedImage != null || _currentPhotoUrl != null)
@@ -298,15 +287,26 @@ class _ProfilePageState extends State<ProfilePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              fixedSize: Size(150, 50),
             ),
           ),
-
+          const SizedBox(height: 20),
+          Divider(
+            color: Colors.grey,
+            thickness: 3,
+            indent: 16,
+            endIndent: 16,
+          ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _username,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Username',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              fillColor: Colors.white,
+              filled: true,
             ),
             validator:
                 (val) => val == null || val.isEmpty ? 'Enter username' : null,
@@ -314,9 +314,13 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _email,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Email',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              fillColor: Colors.white,
+              filled: true,
             ),
             validator:
                 (val) => val == null || val.isEmpty ? 'Enter email' : null,
@@ -325,11 +329,22 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _password,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'New Password (leave blank to keep current)',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              fillColor: Colors.white,
+              filled: true,
             ),
             obscureText: true,
+          ),
+          const SizedBox(height: 20),
+          Divider(
+            color: Colors.grey,
+            thickness: 3,
+            indent: 16,
+            endIndent: 16,
           ),
           const SizedBox(height: 20),
           ElevatedButton(
@@ -366,6 +381,8 @@ class _ProfilePageState extends State<ProfilePage> {
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 45, 93, 141),
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),

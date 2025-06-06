@@ -18,7 +18,6 @@ class BottomNavBar extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.person_2_rounded), label: 'Account'),
-        BottomNavigationBarItem(icon: Icon(Icons.help), label: 'About'),
       ],
       backgroundColor: Colors.white,
     );

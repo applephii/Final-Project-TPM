@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:studybuddy/models/course.dart';
+import 'package:studybuddy/sevices/course_api.dart';
+import 'package:studybuddy/sevices/mentor_api.dart';
 
 class MoneyconvertPage extends StatefulWidget {
   const MoneyconvertPage({super.key});
@@ -12,11 +15,12 @@ class MoneyconvertPage extends StatefulWidget {
 class _MoneyconvertPageState extends State<MoneyconvertPage> {
   final TextEditingController _amountController = TextEditingController();
 
-  String _fromCurrency = 'IDR';
-  String _toCurrency = 'EUR';
+  String _fromCurrency = 'USD';
+  String _toCurrency = 'IDR';
   double _convertedAmount = 0;
   bool isLoading = false;
   String formatedAmount = '';
+  String selectedCurrency = 'USD';
 
   final Map<String, double> exchangeRates = {
     'USD': 1,
@@ -40,13 +44,36 @@ class _MoneyconvertPageState extends State<MoneyconvertPage> {
     formatedAmount = NumberFormat('#,##0.00', 'en_US').format(_convertedAmount);
   }
 
-  final List<Map<String, String>> courses = [
-    {'name': 'Flutter Basics', 'price': '100 USD'},
-    {'name': 'Dart Advanced', 'price': '150 USD'},
-    {'name': 'State Management', 'price': '120 USD'},
-    {'name': 'UI/UX Design', 'price': '90 USD'},
-    {'name': 'Firebase Integration', 'price': '110 USD'},
-  ];
+  List<MentorCourse> _apiCourses = [];
+  bool _isLoadingCourses = true;
+  Map<int, String> _mentorMap = {};
+  Map<int, bool> expandedCards = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadApiCourses();
+  }
+
+  Future<void> _loadApiCourses() async {
+    try {
+      final mentors = await MentorApi.fetchMentors();
+      final mentorMap = {for (var m in mentors) m.id: m.name};
+
+      final allCourses = await CourseApi.getAllCourses();
+
+      setState(() {
+        _mentorMap = mentorMap;
+        _apiCourses = allCourses;
+        _isLoadingCourses = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingCourses = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load courses: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +83,8 @@ class _MoneyconvertPageState extends State<MoneyconvertPage> {
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 45, 93, 141),
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -63,61 +92,135 @@ class _MoneyconvertPageState extends State<MoneyconvertPage> {
           child: Column(
             children: [
               Text(
-                "Available Courses:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                height: 150,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: courses.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    final course = courses[index];
-                    return Container(
-                      width: 160,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade400,
-                            blurRadius: 4,
-                            offset: const Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            course['name']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            course['price']!,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                "Special Offers",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
                 ),
               ),
-              SizedBox(height: 35),
+              SizedBox(height: 15),
+              _isLoadingCourses
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                    height: 430,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _apiCourses.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final course = _apiCourses[index];
+                        final mentorName =
+                            _mentorMap[course.mentorId] ?? "Unknown";
+                        final originalPrice = course.price;
+                        final converted =
+                            originalPrice /
+                            exchangeRates['USD']! *
+                            exchangeRates[selectedCurrency]!;
+                        final formatted = NumberFormat(
+                          '#,##0.00',
+                          'en_US',
+                        ).format(converted);
+                        final isExpanded = expandedCards[course.id] ?? false;
+
+                        return Container(
+                          width: 280,
+                          constraints: BoxConstraints(
+                            minHeight: 200,
+                            maxHeight: isExpanded ? 400 : 200,
+                          ),
+                          child: Card(
+                            color: const Color.fromARGB(255, 45, 93, 141),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            margin: const EdgeInsets.only(bottom: 20),
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              child: DefaultTextStyle(
+                                style: const TextStyle(color: Colors.white),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.white,
+                                      ),
+                                      child: Text(
+                                        course.statusPublish,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                            255,
+                                            45,
+                                            93,
+                                            141,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      course.title,
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "by $mentorName",
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 13),
+
+                                    Text(
+                                      "Only for $formatted $selectedCurrency",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      height: 1,
+                                      width: double.infinity,
+                                      color: Colors.white,
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    Text(
+                                      course.description,
+                                      style: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.white70,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+              SizedBox(height: 25),
               Text(
                 "Convert course price to your currency",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
               ),
               SizedBox(height: 15),
               TextField(
@@ -184,7 +287,6 @@ class _MoneyconvertPageState extends State<MoneyconvertPage> {
               ),
               const SizedBox(height: 20),
 
-              // Convert button
               ElevatedButton(
                 onPressed: _convert,
                 style: ElevatedButton.styleFrom(
@@ -201,16 +303,13 @@ class _MoneyconvertPageState extends State<MoneyconvertPage> {
 
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 184, 225, 255),
-                  borderRadius: BorderRadius.circular(8),
-                  shape: BoxShape.rectangle,
-                ),
+
                 child: Text(
                   '$formatedAmount $_toCurrency',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 45, 93, 141),
                   ),
                 ),
               ),

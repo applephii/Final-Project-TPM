@@ -34,26 +34,26 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
     String? photoUrl;
 
     if (userId != null) {
-    final photoData = await PhotoApi.getProfilePhotoUrl(userId);
+      final photoData = await PhotoApi.getProfilePhotoUrl(userId);
 
-    if (photoData != null) {
-      // photoUrl = photoData['url'];
-      photoUrl = photoData;
-      // final updatedAt = photoData['updatedAt'];
+      if (photoData != null) {
+        // photoUrl = photoData['url'];
+        photoUrl = photoData;
+        // final updatedAt = photoData['updatedAt'];
 
-      print('Photo URL from API: $photoUrl');
-      // print('Photo updatedAt from API: $updatedAt');
+        print('Photo URL from API: $photoUrl');
+        // print('Photo updatedAt from API: $updatedAt');
 
-      // await SessionService.savePhotoUrl(photoUrl ?? '', updatedAt ?? '');
-      await SessionService.savePhotoUrl(photoUrl ?? '');
+        // await SessionService.savePhotoUrl(photoUrl ?? '', updatedAt ?? '');
+        await SessionService.savePhotoUrl(photoUrl ?? '');
+      } else {
+        // await SessionService.savePhotoUrl('', '');
+        await SessionService.savePhotoUrl('');
+        // photoUrl = '';
+      }
     } else {
-      // await SessionService.savePhotoUrl('', '');
-      await SessionService.savePhotoUrl('');
-      // photoUrl = '';
+      print('UserId is null, cannot fetch photo URL.');
     }
-  } else {
-    print('UserId is null, cannot fetch photo URL.');
-  }
 
     setState(() {
       _username = username ?? 'Guest';
@@ -160,7 +160,6 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
                           //   ),
                           // ),
                           child: _childPhotoWidget(),
-
                         ),
                       ],
                     ),
@@ -237,6 +236,27 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
               style: TextStyle(color: Colors.red, fontSize: 16),
             ),
           ),
+          SizedBox(height: 15),
+          Container(
+            height: 2,
+            width: double.infinity,
+            color: const Color.fromARGB(255, 45, 93, 141),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+          ),
+          SizedBox(height: 15),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 45, 93, 141),
+              fixedSize: Size(300, 50),
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, '/kesan');
+            },
+            child: const Text(
+              'About',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
         ],
       ),
     );
@@ -248,36 +268,34 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
   }
 
   Widget _childPhotoWidget() {
-  const placeholderUrl = 'https://cdn-icons-png.flaticon.com/512/3736/3736502.png';
+    const placeholderUrl =
+        'https://cdn-icons-png.flaticon.com/512/3736/3736502.png';
 
-  return CircleAvatar(
-    radius: 80,
-    backgroundColor: Colors.grey[200],
-    child: ClipOval(
-      child: Image.network(
-        _hasPhoto && _photoUrl != null && _photoUrl!.isNotEmpty
-            ? _photoUrl!
-            : placeholderUrl,
-        width: 160,
-        height: 160,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.network(
-            placeholderUrl,
-            width: 160,
-            height: 160,
-            fit: BoxFit.cover,
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        },
+    return CircleAvatar(
+      radius: 80,
+      backgroundColor: Colors.grey[200],
+      child: ClipOval(
+        child: Image.network(
+          _hasPhoto && _photoUrl != null && _photoUrl!.isNotEmpty
+              ? _photoUrl!
+              : placeholderUrl,
+          width: 160,
+          height: 160,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Image.network(
+              placeholderUrl,
+              width: 160,
+              height: 160,
+              fit: BoxFit.cover,
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(child: CircularProgressIndicator());
+          },
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }

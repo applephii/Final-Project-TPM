@@ -80,6 +80,8 @@ class _TimeconvertPageState extends State<TimeconvertPage> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
+        elevation: 6,
+        shadowColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: Padding(

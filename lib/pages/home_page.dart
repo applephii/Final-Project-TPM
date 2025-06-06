@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [MainmenuPage(), ProfilemenuPage(), KesanpesanPage()];
+  final List<Widget> _pages = [MainmenuPage(), ProfilemenuPage()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -36,7 +36,8 @@ class _HomePageState extends State<HomePage> {
         title: Text('StudyBuddy', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 45, 93, 141),
-        
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavBar(

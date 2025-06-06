@@ -35,6 +35,8 @@ class _TasklistPageState extends State<TasklistPage> {
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 45, 93, 141),
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {

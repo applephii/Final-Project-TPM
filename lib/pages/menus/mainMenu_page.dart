@@ -143,7 +143,7 @@ class _MainmenuPageState extends State<MainmenuPage> {
                   ),
                 ),
                 child: Icon(
-                  Icons.person_2_rounded,
+                  Icons.more_horiz_outlined,
                   size: 50,
                   color: Color.fromARGB(255, 45, 93, 141),
                 ),

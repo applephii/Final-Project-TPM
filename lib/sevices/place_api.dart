@@ -34,20 +34,6 @@ class PlaceApi {
     }
   }
 
-  static Future<Place> fetchPlaceDetails(String id) async {
-    try {
-      final response = await http.get(Uri.parse('$_baseUrl/places/$id'));
-
-      if (response.statusCode == 200) {
-        return Place.fromJson(json.decode(response.body));
-      } else {
-        throw Exception('Failed to load place details');
-      }
-    } catch (e) {
-      throw Exception('Error fetching place details: $e');
-    }
-  }
-
   static Future<List<Place>> fetchFavouritePlaces() async {
   final userId = await SessionService.getUserId();
 

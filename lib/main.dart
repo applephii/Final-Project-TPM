@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:studybuddy/pages/home_page.dart';
+import 'package:studybuddy/pages/kesanPesan_page.dart';
 import 'package:studybuddy/pages/login_page.dart';
 import 'package:studybuddy/pages/menus/buddies_page.dart';
 import 'package:studybuddy/pages/menus/clocks/timeConvert_page.dart';
@@ -60,7 +61,8 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfilePage(),
         '/tasklist': (context) => const TasklistPage(),
         '/studybuddy': (context) => const StudybuddyPage(),
-        '/buddies': (context) => const StudyBuddiesTimePage()
+        '/buddies': (context) => const StudyBuddiesTimePage(),
+        '/kesan': (context) => KesanpesanPage()
       },
     );
   }

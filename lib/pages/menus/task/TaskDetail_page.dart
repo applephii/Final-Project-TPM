@@ -64,6 +64,8 @@ class _TaskdetailPageState extends State<TaskdetailPage> {
         title: const Text('Task Detail', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 45, 93, 141),
+        elevation: 6,
+        shadowColor: Colors.blue.shade900,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -109,9 +111,14 @@ class _TaskdetailPageState extends State<TaskdetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: EdgeInsets.only(left: 10, top: 5, bottom: 5, right: 10),
+                  padding: EdgeInsets.only(
+                    left: 10,
+                    top: 5,
+                    bottom: 5,
+                    right: 10,
+                  ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(20),
                     color:
                         task.statusTask == 'done'
                             ? Colors.green
@@ -124,12 +131,19 @@ class _TaskdetailPageState extends State<TaskdetailPage> {
                     style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
-                SizedBox(height: 10,),
+                SizedBox(height: 10),
                 Text(
                   task.title,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
+                Container(
+                  height: 3,
+                  width: double.infinity,
+                  color: const Color.fromARGB(255, 45, 93, 141),
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                ),
+                const SizedBox(height: 10),
                 Text(task.task, style: TextStyle(fontSize: 18)),
               ],
             ),
