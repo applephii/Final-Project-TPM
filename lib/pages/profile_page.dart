@@ -80,11 +80,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final success = await ProfileApi.updateUser(
-        username:
-            _username.text.trim().isNotEmpty ? _username.text.trim() : null,
+        username: _username.text.trim().isNotEmpty
+            ? _username.text.trim()
+            : null,
         email: _email.text.trim().isNotEmpty ? _email.text.trim() : null,
-        password:
-            _password.text.trim().isNotEmpty ? _password.text.trim() : null,
+        password: _password.text.trim().isNotEmpty
+            ? _password.text.trim()
+            : null,
       );
 
       if (!success) {
@@ -165,62 +167,61 @@ class _ProfilePageState extends State<ProfilePage> {
   void _confirmDeletePhoto(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Delete Photo"),
-            content: const Text("Are you sure you want to delete your photo?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Delete Photo"),
+          content: const Text("Are you sure you want to delete your photo?"),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext), // ❗ pakai dialogContext
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(
+                  dialogContext,
+                ); // ❗ hindari pakai context global di sini
 
-                  final userId = await SessionService.getUserId();
-                  if (userId == null || !mounted) return;
+                final userId = await SessionService.getUserId();
+                if (userId == null || !mounted) return;
 
-                  setState(() => _isUploading = true);
-                  bool success = await PhotoApi.deletePhoto(userId);
-                  if (!mounted) return;
-                  setState(() => _isUploading = false);
+                setState(() => _isUploading = true);
+                bool success = await PhotoApi.deletePhoto(userId);
+                if (!mounted) return;
 
-                  if (!mounted) return;
-                  if (success) {
-                    setState(() {
-                      _selectedImage = null;
-                      _currentPhotoUrl = null;
-                    });
-                    // await SessionService.savePhotoUrl('', '');
-                    await SessionService.savePhotoUrl('');
+                setState(() => _isUploading = false);
 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Photo deleted successfully"),
-                        ),
-                      );
-                      Navigator.pop(context, true);
-                    }
-                  } else {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Failed to delete photo"),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
+                if (success) {
+                  setState(() {
+                    _selectedImage = null;
+                    _currentPhotoUrl = null;
+                  });
+                  await SessionService.savePhotoUrl('');
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Photo deleted successfully"),
+                      ),
+                    );
                   }
-                },
-                child: const Text(
-                  "Delete",
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Failed to delete photo"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -232,19 +233,18 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           const SizedBox(height: 10),
           Center(
-            child:
-                _selectedImage != null
-                    ? ClipRRect(
-                      borderRadius: BorderRadius.circular(75),
-                      child: Image.file(
-                        _selectedImage!,
-                        height: 130,
-                        width: 130,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                    : (_currentPhotoUrl != null
-                        ? ClipRRect(
+            child: _selectedImage != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(75),
+                    child: Image.file(
+                      _selectedImage!,
+                      height: 130,
+                      width: 130,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : (_currentPhotoUrl != null
+                      ? ClipRRect(
                           borderRadius: BorderRadius.circular(75),
                           child: Image.network(
                             _currentPhotoUrl!,
@@ -253,12 +253,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             height: 130,
                             width: 130,
                             fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, __, ___) =>
-                                    const Icon(Icons.person, size: 50),
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.person, size: 50),
                           ),
                         )
-                        : const CircleAvatar(
+                      : const CircleAvatar(
                           radius: 50,
                           child: Icon(Icons.person, size: 50),
                         )),
@@ -278,10 +277,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 15),
           ElevatedButton.icon(
-            onPressed:
-                (_selectedImage != null || _currentPhotoUrl != null)
-                    ? () => _confirmDeletePhoto(context)
-                    : null,
+            onPressed: (_selectedImage != null || _currentPhotoUrl != null)
+                ? () => _confirmDeletePhoto(context)
+                : null,
             icon: Icon(Icons.delete),
             label: Text("Delete Photo"),
             style: ElevatedButton.styleFrom(
@@ -291,12 +289,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 20),
-          Divider(
-            color: Colors.grey,
-            thickness: 3,
-            indent: 16,
-            endIndent: 16,
-          ),
+          Divider(color: Colors.grey, thickness: 3, indent: 16, endIndent: 16),
           const SizedBox(height: 20),
           TextFormField(
             controller: _username,
@@ -308,8 +301,8 @@ class _ProfilePageState extends State<ProfilePage> {
               fillColor: Colors.white,
               filled: true,
             ),
-            validator:
-                (val) => val == null || val.isEmpty ? 'Enter username' : null,
+            validator: (val) =>
+                val == null || val.isEmpty ? 'Enter username' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -322,8 +315,8 @@ class _ProfilePageState extends State<ProfilePage> {
               fillColor: Colors.white,
               filled: true,
             ),
-            validator:
-                (val) => val == null || val.isEmpty ? 'Enter email' : null,
+            validator: (val) =>
+                val == null || val.isEmpty ? 'Enter email' : null,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
@@ -340,12 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
             obscureText: true,
           ),
           const SizedBox(height: 20),
-          Divider(
-            color: Colors.grey,
-            thickness: 3,
-            indent: 16,
-            endIndent: 16,
-          ),
+          Divider(color: Colors.grey, thickness: 3, indent: 16, endIndent: 16),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _isUploading ? null : () => _updateProfile(context),
@@ -353,20 +341,19 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: const Color.fromARGB(255, 45, 93, 141),
               fixedSize: Size(150, 50),
             ),
-            child:
-                _isUploading
-                    ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                    : const Text(
-                      "Upload Photo & Update Profile",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+            child: _isUploading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
                     ),
+                  )
+                : const Text(
+                    "Upload Photo & Update Profile",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
           ),
         ],
       ),
@@ -386,10 +373,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
-        child:
-            _isDataLoaded
-                ? _profileForm(context)
-                : const Center(child: CircularProgressIndicator()),
+        child: _isDataLoaded
+            ? _profileForm(context)
+            : const Center(child: CircularProgressIndicator()),
       ),
     );
   }
