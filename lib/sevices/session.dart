@@ -5,6 +5,7 @@ class SessionService {
   static const String _keyUsername = 'username';
   static const String _keyEmail = 'email';
   static const String _keyProfilePhotoUrl = 'photo_url';
+  static const String _keyDonePoints = 'donePoints';
 
   static Future<void> saveUser(
     String userID,
@@ -62,6 +63,22 @@ class SessionService {
     await prefs.remove(_keyUsername);
     await prefs.remove(_keyEmail);
     await prefs.remove(_keyProfilePhotoUrl);
+  }
+
+  //point
+  static Future<void> setDonePoints(int points) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyDonePoints, points);
+  }
+
+  static Future<int> getDonePoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyDonePoints) ?? 0;
+  }
+
+  static Future<void> clearDonePoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyDonePoints);
   }
 
   //route request

@@ -3,6 +3,7 @@ import 'package:studybuddy/pages/profile_page.dart';
 import 'package:studybuddy/sevices/photo_api.dart';
 import 'package:studybuddy/sevices/profile_api.dart';
 import 'package:studybuddy/sevices/session.dart';
+import 'package:studybuddy/sevices/task_api.dart';
 
 class ProfilemenuPage extends StatefulWidget {
   const ProfilemenuPage({super.key});
@@ -17,6 +18,7 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
   String? _photoUrl;
   bool _isLoaded = false;
   bool _hasPhoto = false;
+  int _points = 0;
 
   @override
   void initState() {
@@ -29,6 +31,9 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
     final email = await SessionService.getEmail();
     final userId = await SessionService.getUserId();
 
+    final tasks = await TaskApi.getTasks();
+    _points = tasks.where((t) => t.statusTask == 'done').length;
+
     print('UserId from session: $userId');
 
     String? photoUrl;
@@ -37,19 +42,12 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
       final photoData = await PhotoApi.getProfilePhotoUrl(userId);
 
       if (photoData != null) {
-        // photoUrl = photoData['url'];
         photoUrl = photoData;
-        // final updatedAt = photoData['updatedAt'];
+        print('Photo URL from API: $photoUrl'); //for debug
 
-        print('Photo URL from API: $photoUrl');
-        // print('Photo updatedAt from API: $updatedAt');
-
-        // await SessionService.savePhotoUrl(photoUrl ?? '', updatedAt ?? '');
         await SessionService.savePhotoUrl(photoUrl ?? '');
       } else {
-        // await SessionService.savePhotoUrl('', '');
         await SessionService.savePhotoUrl('');
-        // photoUrl = '';
       }
     } else {
       print('UserId is null, cannot fetch photo URL.');
@@ -67,26 +65,20 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Account'),
-            content: const Text(
-              'Are you sure you want to delete your profile?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure you want to delete your profile?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
 
     if (confirmed == true) {
@@ -112,13 +104,9 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
-        child:
-            !_isLoaded
-                ? Center(child: CircularProgressIndicator())
-                : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _profile(),
-                ),
+        child: !_isLoaded
+            ? Center(child: CircularProgressIndicator())
+            : Padding(padding: const EdgeInsets.all(16.0), child: _profile()),
       ),
     );
   }
@@ -133,62 +121,61 @@ class _ProfilemenuPageState extends State<ProfilemenuPage> {
                 flex: 1,
                 child: Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.bottomRight,
+                    Column(
                       children: [
-                        CircleAvatar(
-                          radius: 80,
-                          // backgroundImage:
-                          // _hasPhoto
-                          //     ? NetworkImage(_photoUrl!)
-                          //     : NetworkImage(
-                          //       'https://cdn-icons-png.flaticon.com/512/3736/3736502.png',
-                          //     ),
-                          // NetworkImage(
-                          //   _hasPhoto
-                          //       ? _photoUrl!
-                          //       : 'https://cdn-icons-png.flaticon.com/512/3736/3736502.png',
-                          // ),
-                          // child: ClipOval(
-                          //   child: FadeInImage.assetNetwork(
-                          //     placeholder:
-                          //         'https://cdn-icons-png.flaticon.com/512/3736/3736502.png',
-                          //     image: _photoUrl!,
-                          //     fit: BoxFit.cover,
-                          //     height: 160,
-                          //     width: 160,
-                          //   ),
-                          // ),
-                          child: _childPhotoWidget(),
+                        CircleAvatar(radius: 80, child: _childPhotoWidget()),
+                        const SizedBox(height: 16),
+                        Card(
+                          color: Colors.white,
+                          margin: EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                              '🎯 Your Points: $_points',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color.fromARGB(255, 45, 93, 141),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 5),
                     Text(
                       _username,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 3),
                     Text(
                       _email,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
                         color: Colors.grey,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 10),
             ],
           ),
-          SizedBox(height: 50),
+          SizedBox(height: 10),
+          Container(
+            height: 2,
+            width: double.infinity,
+            color: const Color.fromARGB(255, 45, 93, 141),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+          ),
+          SizedBox(height: 10),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 45, 93, 141),
