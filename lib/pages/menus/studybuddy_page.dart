@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:studybuddy/sevices/notification_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:studybuddy/sevices/notification_service.dart';
 
 class StudybuddyPage extends StatefulWidget {
   const StudybuddyPage({super.key});
@@ -19,28 +23,17 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
   bool _isMoving = false;
   Timer? _movementResetTimer;
 
-  final List<Map<String, String>> books = [
-    {
-      'name': 'Book 1',
-      'link':
-          'https://www.google.co.id/books/edition/Pengantar_Teknik_Informatika/b7JbEQAAQBAJ?hl=en&gbpv=0',
-    },
-    {
-      'name': 'Book 2',
-      'link':
-          'https://www.google.co.id/books/edition/FILSAFAT_INFORMATIKA/C_Q6EQAAQBAJ?hl=en&gbpv=0',
-    },
-    {
-      'name': 'Book 3',
-      'link':
-          'https://www.google.co.id/books/edition/LOGIKA_INFORMATIKA/nkSwEAAAQBAJ?hl=en&gbpv=0',
-    },
-    {
-      'name': 'Book 4',
-      'link':
-          'https://www.google.co.id/books/edition/Teknologi_Informatika/lE3OEAAAQBAJ?hl=en&gbpv=0',
-    },
-  ];
+  Duration _duration = const Duration(minutes: 1);
+  Duration _remaining = const Duration(minutes: 1);
+  Timer? _timer;
+  bool _isRunning = false;
+  bool _soundOn = true;
+  bool _notifOn = true;
+
+  final _player = AudioPlayer();
+  final _notifPlugin = flutterLocalNotificationsPlugin;
+  final String _alarmUrl =
+      'https://www.orangefreesounds.com/wp-content/uploads/2018/12/Gentle-wake-alarm-clock.mp3';
 
   String get formattedLastMovement =>
       DateFormat('HH:mm:ss').format(_lastMovementTime);
@@ -85,47 +78,70 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
   void dispose() {
     _subscription.cancel();
     _movementResetTimer?.cancel();
+    _timer?.cancel();
+    _player.dispose();
     super.dispose();
   }
 
-  Widget _buildBookCard(Map<String, String> book) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 4,
-      shadowColor: Colors.blue.shade200,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        leading: Icon(Icons.menu_book_outlined,
-            color: Colors.blue.shade800, size: 40),
-        title: Text(
-          book['name'] ?? '',
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
-        ),
-        trailing: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          onPressed: () async {
-            final url = Uri.parse(book['link']!);
-            if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Could not launch ${book['link']}')),
-              );
-            }
-          },
-          child: const Text(
-            "Open",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-        ),
-      ),
+  //Timer
+  Future<void> _showNotification() async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'repeat_channel_id',
+          'Repeating Notifications',
+          channelDescription: 'Notifications shown periodically',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Waktu Habis',
+      'Timer belajar selesai!',
+      platformDetails,
     );
   }
+
+  Future<void> _playAlarm() async {
+    try {
+      await _player.play(UrlSource(_alarmUrl));
+    } catch (e) {
+      // Jika gagal dari URL, mainkan dari lokal
+      await _player.play(AssetSource('alarm.mp3'));
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _remaining = _duration;
+    setState(() => _isRunning = true);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remaining.inSeconds <= 1) {
+        timer.cancel();
+        setState(() => _isRunning = false);
+        if (_soundOn) _playAlarm();
+        if (_notifOn) _showNotification();
+      } else {
+        setState(() {
+          _remaining -= const Duration(seconds: 1);
+        });
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    setState(() {
+      _isRunning = false;
+      _remaining = _duration;
+    });
+  }
+
+  String _formatDuration(Duration d) =>
+      d.toString().split('.').first.padLeft(8, "0");
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +168,7 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
                 color: Colors.blue.shade900,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 25),
               decoration: BoxDecoration(
@@ -160,9 +176,10 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: _isMoving
-                        ? Colors.blue.shade300.withOpacity(0.7)
-                        : Colors.grey.shade500.withOpacity(0.5),
+                    color:
+                        _isMoving
+                            ? Colors.blue.shade300.withOpacity(0.7)
+                            : Colors.grey.shade500.withOpacity(0.5),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -171,11 +188,7 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.directions_run,
-                    size: 32,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.directions_run, size: 32, color: Colors.white),
                   const SizedBox(width: 15),
                   Flexible(
                     child: Text(
@@ -183,17 +196,18 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
                           ? 'Device bergerak pada $formattedLastMovement'
                           : 'Tidak ada pergerakan terdeteksi',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             Text(
-              "Books Available",
+              "Study Timer",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -201,11 +215,136 @@ class _StudybuddyPageState extends State<StudybuddyPage> {
               ),
             ),
             const SizedBox(height: 10),
-            ...books.map((book) => _buildBookCard(book)).toList(),
-            const SizedBox(height: 20),
+            Column(
+              children: [
+                const Text('Set Your Study Session'),
+                _buildTimePicker(),
+                const SizedBox(height: 30),
+                Text(
+                  _formatDuration(_remaining),
+                  style: const TextStyle(fontSize: 48),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: _isRunning ? _stopTimer : _startTimer,
+                  child: Text(_isRunning ? 'Stop' : 'Start', style: TextStyle(color: Colors.white, fontSize: 16),),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isRunning ? Colors.red : const Color.fromARGB(255, 45, 93, 141),
+                    fixedSize: Size(150, 50),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                SwitchListTile(
+                  title: const Text('Suara'),
+                  value: _soundOn,
+                  onChanged: (val) => setState(() => _soundOn = val),
+                ),
+                SwitchListTile(
+                  title: const Text('Notifikasi'),
+                  value: _notifOn,
+                  onChanged: (val) => setState(() => _notifOn = val),
+                ),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTimePicker() {
+    return SizedBox(
+      height: 150,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 90,
+            child: _numberPicker(
+              label: 'Hour',
+              value: _duration.inHours,
+              max: 23,
+              onChanged: (val) {
+                setState(() {
+                  _duration = Duration(
+                    hours: val,
+                    minutes: _duration.inMinutes % 60,
+                    seconds: _duration.inSeconds % 60,
+                  );
+                  _remaining = _duration;
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 90,
+            child: _numberPicker(
+              label: 'Minute',
+              value: _duration.inMinutes % 60,
+              max: 59,
+              onChanged: (val) {
+                setState(() {
+                  _duration = Duration(
+                    hours: _duration.inHours,
+                    minutes: val,
+                    seconds: _duration.inSeconds % 60,
+                  );
+                  _remaining = _duration;
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 90,
+            child: _numberPicker(
+              label: 'Second',
+              value: _duration.inSeconds % 60,
+              max: 59,
+              onChanged: (val) {
+                setState(() {
+                  _duration = Duration(
+                    hours: _duration.inHours,
+                    minutes: _duration.inMinutes % 60,
+                    seconds: val,
+                  );
+                  _remaining = _duration;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _numberPicker({
+    required String label,
+    required int value,
+    required int max,
+    required void Function(int) onChanged,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label),
+        SizedBox(
+          width: 80, // FIXED WIDTH!
+          height: 100,
+          child: ListWheelScrollView.useDelegate(
+            itemExtent: 30,
+            perspective: 0.002,
+            diameterRatio: 1.2,
+            physics: const FixedExtentScrollPhysics(),
+            onSelectedItemChanged: onChanged,
+            childDelegate: ListWheelChildBuilderDelegate(
+              builder: (context, index) => Center(child: Text('$index')),
+              childCount: max + 1,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

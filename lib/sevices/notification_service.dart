@@ -84,9 +84,6 @@ Future<void> showRepeatingNotification() async {
     platformDetails,
   );
 
-  // const NotificationDetails platformChannelSpecifics =
-  //     NotificationDetails(android: androidPlatformChannelSpecifics);
-
   await flutterLocalNotificationsPlugin.periodicallyShow(
     1,
     'Word of the Moment',
