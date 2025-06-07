@@ -49,7 +49,6 @@ class _RegistPageState extends State<RegistPage> {
         userData['username'],
         userData['email'],
         userData['photo_url'],
-        // userData['updateAt']
       );
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {

@@ -63,6 +63,7 @@ class SessionService {
     await prefs.remove(_keyUsername);
     await prefs.remove(_keyEmail);
     await prefs.remove(_keyProfilePhotoUrl);
+    await prefs.remove(_keyDonePoints);
   }
 
   //point
@@ -74,11 +75,6 @@ class SessionService {
   static Future<int> getDonePoints() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyDonePoints) ?? 0;
-  }
-
-  static Future<void> clearDonePoints() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyDonePoints);
   }
 
   //route request
