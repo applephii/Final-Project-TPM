@@ -174,14 +174,14 @@ class _ProfilePageState extends State<ProfilePage> {
           actions: [
             TextButton(
               onPressed: () =>
-                  Navigator.pop(dialogContext), // ❗ pakai dialogContext
+                  Navigator.pop(dialogContext),
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(
                   dialogContext,
-                ); // ❗ hindari pakai context global di sini
+                );
 
                 final userId = await SessionService.getUserId();
                 if (userId == null || !mounted) return;
